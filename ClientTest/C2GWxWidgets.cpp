@@ -6,6 +6,7 @@
 #ifndef wxHAS_IMAGES_IN_RESOURCES
 #include "../sample.xpm"
 #endif
+#include "MyClass.h"
 extern int glob;
 enum ID_COMMANDS {
 	Minimal_Quit = wxID_EXIT,
@@ -23,6 +24,9 @@ class MyFrame : public wxFrame {
 private:
 	wxTextCtrl* textctrlLog;
 	wxStreamToTextRedirector* redirector;
+	int xx;
+	MyClass obj;
+
 	int xx = 1;
 	void OnButton_0(wxCommandEvent& event) {
 		std::cout << "Print hello world" << std::endl;
@@ -45,7 +49,8 @@ bool MyApp::OnInit() {
 	frame->Show(true);
 	return true;
 }
-MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
+MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title)
+, xx(1), obj(xx) {
 	SetIcon(wxICON(sample));
    #if wxUSE_MENUBAR
    wxMenu* fileMenu = new wxMenu;

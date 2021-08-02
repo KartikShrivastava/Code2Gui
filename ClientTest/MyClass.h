@@ -3,7 +3,8 @@
 class MyClass
 {
 public:
-	MyClass();
+	MyClass() = default;
+	MyClass(int x);
 
 	void CallMyMethod();
 };

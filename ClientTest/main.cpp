@@ -1,6 +1,7 @@
 ///		include all the files, irrespective of redundancy
 #include <iostream>
 #include <vector>
+#include "MyClass.h"
 
 ///		include using namespace lines
 using namespace std;
@@ -22,8 +23,9 @@ int main( int argc, char** argv)
 {
 	std::cout << "Main entry point!" << std::endl;
 	
-	int xx;
+	int xx = 1;
 	vector<int> xz;
+	MyClass obj(xx);
 
 	xx = 1;
 
@@ -40,10 +42,9 @@ int main( int argc, char** argv)
 			std::cout << xz[i] << std::endl;
 	}//(
 
+	{//>
+
+	}//>
+
 	return 0;
 }
-
-void sss() {
-
-}
-

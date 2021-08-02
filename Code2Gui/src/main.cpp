@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <unordered_set>
+#include <list>
 
 std::string removeSpaces(const std::string& line) {
 	std::string stringNoSpaces = "";
@@ -25,45 +26,48 @@ enum KindTag
 	LOCAL,
 };
 
-struct TagDetail
+	///		In case of static variables of methods whole defintion can be multiline
+	///		so we've to catch the whole definition. And this boolean is helpful in that.
+	//bool definitionCompleteIfStatic;
+	//std::string definition;
+struct GenericTagDetails
 {
 	KindTag kind;
 	int lineNum;
-	bool definitionFound;
-	///		In case of static variables of methods whole defintion can be multiline
-	///		so we've to catch the whole definition. And this boolean is helpful in that.
-	bool definitionCompleteIfStatic;
 	std::string title;
+};
+
+struct UnscopedStaticVars : GenericTagDetails
+{
+	bool definitionExists;
+	std::string declarationNdDefinition;
+};
+
+struct UnscopedNonStaticVars : GenericTagDetails
+{
+	std::string declaration;
+};
+
+struct UnscopedStaticFunctions : GenericTagDetails
+{
+	bool definitionExists;
+	std::string declarationNdDefinition;
+};
+
+struct UnscopedNonStaticFunctions : GenericTagDetails
+{
+	std::string declaration;
+};
+
+struct ScopedMainVars : GenericTagDetails
+{
+	bool definitionExists;
 	std::string declaration;
 	std::string definition;
 };
 
 int main() {
-	///		1. Traverse the file which contains int main(...) and
-	///		   look for expressions containing "{" opening curly bracket.
-	///		2. Start storing the code encountered after "{" line-by-line.
-	///		4. End storing when "}" is encountered.
-	///		5. Take the stored code and put it in a file named temp.cpp.
-
-	///		argv[0]: path to main file
-	///		argv[1]: window title
-	
-	/*std::ifstream c2gInternalMeta("c2g.meta");
-	if (!c2gInternalMeta.is_open()) {
-		std::cout << "Code2Gui::Error:: Could not locate internal metadata file." << std::endl;
-		std::cout << "                  Try running the Code2Gui setup again." << std::endl;
-		std::cout << "Code2Gui::Log:: Exiting..." << std::endl;
-		return 0;
-	}*/
 	std::string metadataLoc = "C2GMetadata.txt";
-	/*std::getline(c2gInternalMeta, metadataLoc);
-	if (metadataLoc.compare("") == 0) {
-		std::cout << "Code2Gui::Error:: Internal metadata file got corrupted." << std::endl;
-		std::cout << "                  Try running the Code2Gui setup again."<< std::endl;
-		std::cout << "Code2Gui::Log:: Exiting..." << std::endl;
-		return 0;
-	}
-	c2gInternalMeta.close();*/
 
 	std::string windowTitle;
 	std::string mainFilePath;
@@ -90,24 +94,30 @@ int main() {
 
 	///		Array of line splits of those members which are unscoped and marked as static in main file
 	///		These varibles need static re-declaration and re-definition in C2GWxWidgets file
-	std::vector<TagDetail> staticUnscopedVars;
+	std::vector<UnscopedStaticVars> staticUnscopedVars;
+	///		List of pairs of lineNumbers and vector indices of the corresponding line number
+	std::list<std::pair<int,int>> staticUnscpVarsNoDefLines;
 
 	///		Array of line splits of those members which are unscoped(and global) present in main file
 	///		These varibles need extern keyword declaration in C2GWxWidgets file
-	std::vector<TagDetail> globalUnscopeVars;
+	std::vector<UnscopedNonStaticVars> globalUnscopeVars;
 	
 	///		Array of line splits of those methods/functions which are unscoped and marked as static in main file
 	///		These methods need static re-declaration and re-definition in C2GWxWidgets file
-	std::vector<TagDetail> staticUnscopedFunctions;
-	
+	std::vector<UnscopedStaticFunctions> staticUnscopedFunctions;
+	///		List of pairs of lineNumbers and vector indices of the corresponding line number
+	std::list<std::pair<int, int>> staticUnscpFuncsNoDefLines;
+
 	///		Array of line splits of those methods/functions which are unscoped(and global) present in main file
 	///		These methods need extern keyword declaration in C2GWxWidgets file
-	std::vector<TagDetail> globalUnscopedFunctions;
+	std::vector<UnscopedNonStaticFunctions> globalUnscopedFunctions;
 
 	///		Array of line splits of those variables which are defined in main method
 	///		Declaration of these variables need to be extracted and put into Frame class and
 	///		Defintion of these variables need to be extracted and put into contructor of Frame class
-	std::vector<TagDetail> mainScopedVars;
+	std::vector<ScopedMainVars> scopedMainVars;
+	///		List of pairs of lineNumbers and vector indices of the corresponding line number
+	std::list<std::pair<int, int>> scpMainVarsNoDefLines;
 
 	///		Important Assumption: ctags.txt is sorted according to line number
 	///		If it wont be sorted according to line numbers then code will break!
@@ -139,7 +149,7 @@ int main() {
 			++idx;
 		}
 
-		TagDetail tempTagDetail;
+		GenericTagDetails tempTagDetail;
 		if (tokens.size() && nameIdx != -1 && declarationIdx != -1 && kindIdx != -1 && lineIdx != -1) {
 			///		Get the title of the tag
 			tempTagDetail.title = tokens[nameIdx];
@@ -193,182 +203,198 @@ int main() {
 				if (!mainSeenInTagFile) {
 					if (tempTagDetail.kind == KindTag::VARIABLE) {
 						///		[------------UNSCOPED STATIC VARIBLES------------]
-						///		we'll separate declaration and definition and use declaration as Frame member in
-						///		C2GWxWidgets.cpp and definition in Frame's constructor
+						///		we'll save decleration + definition(if possible) and put it at the top of *WxWidgets.cpp file
 						if (declarationNdDef.compare("static") == 0) {
+							UnscopedStaticVars tempUnscopedStaticVar;
+							tempUnscopedStaticVar.kind = tempTagDetail.kind;
+							tempUnscopedStaticVar.lineNum = tempTagDetail.lineNum;
+							tempUnscopedStaticVar.title = tempTagDetail.title;
+
 							size_t equalstoIndexPos = declarationNdDef.find_first_of("=");
 
-							///		If equals to '=' is present then definition is found
+							///		If equals to '=' is present then definition is probably found
 							if (equalstoIndexPos != std::string::npos) {
-								///		e.g. 
+								///		e.g.:
 								///			static int x = 10;
-								if (declarationNdDef.compare(";") == 0) {
-									tempTagDetail.definitionCompleteIfStatic = true;
-									tempTagDetail.definition = tempTagDetail.title + " = " + declarationNdDef.substr(equalstoIndexPos, 
-																declarationNdDef.length() - equalstoIndexPos + 1) + ";";
-								}
+								///		stays same:
+								///			static int x = 10;
+								if (declarationNdDef.compare(";") == 0)
+									tempUnscopedStaticVar.definitionExists = true;
 								///		In case whole definition is written in multi-line, then make suitable flag
-								///		false and while traversing main file, retrieve whole definition.
-								///		e.g.
+								///		false and while traversing main file, try to retrieve whole definition.
+								///		e.g.:
 								///			static int x = 
-								///			10;
+								///		stays same:
+								///			static int x =
 								else {
-									tempTagDetail.definitionFound = false;
-									tempTagDetail.definitionCompleteIfStatic = false;
-									tempTagDetail.definition = "";
+									tempUnscopedStaticVar.definitionExists = false;
+									staticUnscpVarsNoDefLines.push_back({ tempUnscopedStaticVar.lineNum,staticUnscopedVars.size() });
 								}
-								tempTagDetail.definitionFound = true;
-								tempTagDetail.declaration = declarationNdDef.substr(0, equalstoIndexPos) + ";";
 							}
-							///		e.g.
-							///		static int x;
+							///		e.g.:
+							///			static int x;
+							///		stays same but TODO: Write suitable implementation to find definition
+							///			static int x;
 							else {
-								tempTagDetail.definitionFound = false;
-								tempTagDetail.definitionCompleteIfStatic = false;
-								tempTagDetail.definition = "";
-								tempTagDetail.declaration = declarationNdDef;
+								tempUnscopedStaticVar.definitionExists = false;
+								//staticUnscpVarsNoDefLines.push_back(tempUnscopedStaticVar.lineNum);
 							}
-							staticUnscopedVars.push_back(tempTagDetail);
+							tempUnscopedStaticVar.declarationNdDefinition = declarationNdDef;
+							staticUnscopedVars.push_back(tempUnscopedStaticVar);
 						}
 						///		[------------UNSCOPED NON-STATIC VARIBLES------------]
 						///		In this case we need declaration (to make it extern in C2GWxWidgets.cpp,
 						///		Dont care much about definition)
 						else {
+							UnscopedNonStaticVars tempUnscopedNonStaticVar;
+							tempUnscopedNonStaticVar.kind = tempTagDetail.kind;
+							tempUnscopedNonStaticVar.lineNum = tempTagDetail.lineNum;
+							tempUnscopedNonStaticVar.title = tempTagDetail.title;
+
+							///		Handle case in which function declaration is already extern
+
 							size_t equalstoIndexPos = declarationNdDef.find_first_of("=");
 
-							///		If equals to '=' is present then definition is found
-							///		e.g. 
-							///			int x = 10;
-							///		or
-							///			int x =
-							///			10;
-							if (equalstoIndexPos != std::string::npos)
-								tempTagDetail.declaration = declarationNdDef.substr(0, equalstoIndexPos) + ";";
+							///		If equals to '=' is present then remove definition
+							if (equalstoIndexPos != std::string::npos) {
+								///		e.g.:
+								///			int x = 10;
+								///		or
+								///			int x = 
+								///		converts to:
+								///			extern int x;
+								tempUnscopedNonStaticVar.declaration = "extern " + declarationNdDef.substr(0, equalstoIndexPos) + ";";
+							}
 							///		e.g.
-							///		int x;
-							else
-								tempTagDetail.declaration = declarationNdDef;
-
-							tempTagDetail.definitionFound = false;
-							tempTagDetail.definitionCompleteIfStatic = false;
-							tempTagDetail.definition = "";
-							globalUnscopeVars.push_back(tempTagDetail);
+							///			static int x;
+							///		converts to:
+							///			extern int x;
+							else {
+								tempUnscopedNonStaticVar.declaration = "extern " + declarationNdDef;
+							}
+							globalUnscopeVars.push_back(tempUnscopedNonStaticVar);
 						}
 					}
 					else if(tempTagDetail.kind == KindTag::FUNCTION) {
 						///		[------------UNSCOPED STATIC FUNCTIONS------------]
-						///		we'll separate declaration and definition and use declaration as Frame member in
-						///		C2GWxWidgets.cpp and definition in Frame's constructor
+						///		we'll save decleration + definition(if possible) and put it at the top of *WxWidgets.cpp file
 						if (declarationNdDef.compare("static") == 0) {
-							size_t equalstoIndexPos = declarationNdDef.find_first_of("=");
+							UnscopedStaticFunctions tempUnscopedStaticFunctions;
+							tempUnscopedStaticFunctions.kind = tempTagDetail.kind;
+							tempUnscopedStaticFunctions.lineNum = tempTagDetail.lineNum;
+							tempUnscopedStaticFunctions.title = tempTagDetail.title;
 
-							///		If equals to '=' is present then definition is found
-							if (equalstoIndexPos != std::string::npos) {
-								///		e.g. 
-								///			static int x = 10;
-								if (declarationNdDef.compare(";") == 0) {
-									tempTagDetail.definitionCompleteIfStatic = true;
-									tempTagDetail.definition = tempTagDetail.title + " = " + declarationNdDef.substr(equalstoIndexPos,
-										declarationNdDef.length() - equalstoIndexPos + 1) + ";";
-								}
-								///		In case whole definition is written in multi-line, then make suitable flag
-								///		false and while traversing main file, retrieve whole definition.
-								///		e.g.
-								///			static int x = 
-								///			10;
-								else {
-									tempTagDetail.definitionFound = false;
-									tempTagDetail.definitionCompleteIfStatic = false;
-									tempTagDetail.definition = "";
-								}
-								tempTagDetail.definitionFound = true;
-								tempTagDetail.declaration = declarationNdDef.substr(0, equalstoIndexPos) + ";";
-							}
-							///		e.g.
-							///		static int x;
+							size_t rightCurlyPos = declarationNdDef.find_last_of("}");
+
+							///		If right curly bracket '|' is present then definition is found
+							///		e.g.:
+							///			static int foo() { return 10; }
+							///		stays same:
+							///			static int foo() { return 10; }
+							if (rightCurlyPos != std::string::npos)
+								tempUnscopedStaticFunctions.definitionExists = true;
+							///		else we've to definitely complete the definition while traversing main
+							///		e.g.:
+							///			static int foo() { 
+							///		stays same:
+							///			static int foo() { 
 							else {
-								tempTagDetail.definitionFound = false;
-								tempTagDetail.definitionCompleteIfStatic = false;
-								tempTagDetail.definition = "";
-								tempTagDetail.declaration = declarationNdDef;
+								tempUnscopedStaticFunctions.definitionExists = false;
+								staticUnscpFuncsNoDefLines.push_back({ tempUnscopedStaticFunctions.lineNum, staticUnscopedFunctions.size() });
 							}
-							staticUnscopedVars.push_back(tempTagDetail);
+
+							tempUnscopedStaticFunctions.declarationNdDefinition = declarationNdDef;
+							staticUnscopedFunctions.push_back(tempUnscopedStaticFunctions);
 						}
 						///		[------------UNSCOPED NON-STATIC VARIBLES------------]
-						///		In this case we need declaration (to make it extern in C2GWxWidgets.cpp,
-						///		Dont care much about definition)
+						///		In this case we need declaration (and make it extern in *WxWidgets.cpp,
+						///		we dont care much about definition)
 						else {
-							size_t equalstoIndexPos = declarationNdDef.find_first_of("=");
+							UnscopedNonStaticFunctions tempGlobalUnscopedFunctions;
+							tempGlobalUnscopedFunctions.kind = tempTagDetail.kind;
+							tempGlobalUnscopedFunctions.lineNum = tempTagDetail.lineNum;
+							tempGlobalUnscopedFunctions.title = tempTagDetail.title;
 
-							///		If equals to '=' is present then definition is found
-							///		e.g. 
-							///			int x = 10;
+							size_t rightCurlyPos = declarationNdDef.find_last_of("}");
+							size_t leftCurlyPos = declarationNdDef.find_first_of("{");
+
+							///		If right curly bracket is present then take declaration upto first
+							///		left curly bracket
+							///		e.g.:
+							///			int foo() { return 10; }
 							///		or
-							///			int x =
-							///			10;
-							if (equalstoIndexPos != std::string::npos)
-								tempTagDetail.declaration = declarationNdDef.substr(0, equalstoIndexPos) + ";";
-							///		e.g.
-							///		int x;
+							///			int foo() { 
+							///		converts to:
+							///			extern int foo();
+							if (rightCurlyPos != std::string::npos || leftCurlyPos != std::string::npos)
+								tempGlobalUnscopedFunctions.declaration = "extern " + declarationNdDef.substr(0, leftCurlyPos) + ";";
+							///		else take whole string terminated with ';'
+							///		e.g.:
+							///			int foo() 
+							///		converts to:
+							///			extern int foo();
 							else
-								tempTagDetail.declaration = declarationNdDef;
+								tempGlobalUnscopedFunctions.declaration = "extern " + declarationNdDef + ";";
 
-							tempTagDetail.definitionFound = false;
-							tempTagDetail.definitionCompleteIfStatic = false;
-							tempTagDetail.definition = "";
-							globalUnscopeVars.push_back(tempTagDetail);
+							globalUnscopedFunctions.push_back(tempGlobalUnscopedFunctions);
 						}
 					}
-
-					tempTagDetail.definitionFound = false;
-					tempTagDetail.declaration = declarationNdDef;
-					tempTagDetail.definition = "";
-					tempTagDetail.definitionCompleteIfStatic = false;
 				}
-				
-				///		Check if variables are defined during declaration,
-				///		If so then separate definition from declaration
-				size_t equalstoIndexPos = declarationNdDef.find_first_of("=");
-				if (equalstoIndexPos != std::string::npos) {
-					tempTagDetail.definitionFound = true;
-					tempTagDetail.definitionCompleteIfStatic = true;
-					tempTagDetail.declaration = declarationNdDef.substr(0, equalstoIndexPos) + ";";
-					tempTagDetail.definition = tempTagDetail.title + declarationNdDef.substr(equalstoIndexPos, declarationNdDef.length() - equalstoIndexPos + 1) + ";";
-				}
-				///		Else take the declaration and explicitly make definition empty string
 				else {
-					tempTagDetail.definitionFound = false;
-					tempTagDetail.declaration = declarationNdDef;
-					tempTagDetail.definition = "";
-					tempTagDetail.definitionCompleteIfStatic = false;
-				}
-			}
-			else {
-				tempTagDetail.definitionFound = false;
-				tempTagDetail.declaration = "";
-				tempTagDetail.definition = "";
-			}
+					if (tempTagDetail.kind == KindTag::LOCAL) {
+						///		[------------SCOPED MAIN LOCAL VARIBLES------------]
+						///		we'll save decleration + definition(if possible) and put it at the 
+						///		initializer list of *Frame constructor in *WxWidgets.cpp
+						ScopedMainVars tempScopedMainVars;
+						tempScopedMainVars.kind = tempTagDetail.kind;
+						tempScopedMainVars.lineNum = tempTagDetail.lineNum;
+						tempScopedMainVars.title = tempTagDetail.title;
 
-			///		If main is not seen then fill unscoped TagDetails vectors
-			if (!mainSeenInTagFile) {
-				if (tempTagDetail.kind == KindTag::VARIABLE) {
-					///		If variable is static
-					if (tempTagDetail.declaration.compare("static") == 0)
-						staticUnscopedVars.push_back(tempTagDetail);
-					else
-						globalUnscopeVars.push_back(tempTagDetail);
-				}
-				else if (tempTagDetail.kind == KindTag::FUNCTION) {
-					///		If variable is static
-					if (tempTagDetail.declaration.compare("static") == 0)
-						staticUnscopedFunctions.push_back(tempTagDetail);
-					else
-						globalUnscopedFunctions.push_back(tempTagDetail);
+						size_t equalstoPos = declarationNdDef.find_first_of("=");
+						size_t semicolorPos = declarationNdDef.find_first_of(";");
+
+						///		If equals to '=' and semicolon ';' is present then definition is found
+						///		e.g.:
+						///			int x = 10;
+						///		converts to:
+						///			declaration: int x;
+						///			definition: x(10)
+						if (equalstoPos != std::string::npos && semicolorPos != std::string::npos) {
+							tempScopedMainVars.declaration = declarationNdDef.substr(0, equalstoPos) + ";";
+							tempScopedMainVars.definition = tempScopedMainVars.title + "(" +
+								declarationNdDef.substr(equalstoPos + 1, semicolorPos - equalstoPos - 1) +
+								")";
+							tempScopedMainVars.definitionExists = true;
+						}
+						///		If equals to is present/absent but semicolon is absent the definition is multiline
+						///		so you've to retrieve it while traversing main method
+						///		e.g.:
+						///			std::string str = "this is a useful comment"+ 
+						///		or
+						///			std::string str;
+						///			
+						///		converts to:
+						///			declaration: int x;
+						///			definition: not yet found
+						else {
+							tempScopedMainVars.definition = "";
+							tempScopedMainVars.definitionExists = false;
+							scpMainVarsNoDefLines.push_back({ tempScopedMainVars.lineNum, scopedMainVars.size() });
+							if (equalstoPos != std::string::npos) {
+								tempScopedMainVars.declaration = declarationNdDef.substr(0, equalstoPos) + ";";
+								tempScopedMainVars.definition = tempScopedMainVars.title + "(" + 
+																declarationNdDef.substr(equalstoPos, declarationNdDef.length() - equalstoPos);
+							}
+							///		Assuming that semicolor is present
+							else {
+								tempScopedMainVars.declaration = declarationNdDef;
+								tempScopedMainVars.definition = tempScopedMainVars.title + "(";
+							}
+						}
+						scopedMainVars.push_back(tempScopedMainVars);
+					}
 				}
 			}
-			else
-				if(tempTagDetail.kind == KindTag::VARIABLE)
-					mainScopedVars.push_back(tempTagDetail);
 		}
 	}
 
@@ -380,19 +406,44 @@ int main() {
 	}
 	
 	line = "";
+	int lineNumber = 0;
+	bool searchingSUVarDSemiColon = false,		///		SUVD: Static Unscoped Var Definition
+		searchingSUFuncDRParanthesis = false;	///		SUFDR: Static Unscoped Function Definition Right
 	bool mainSeen = false;
 
-	std::string includes = "";
-	std::string usingNamespaces = "";
+	std::string includesStr = "";
+	std::string usingNamespacesStr = "";
 
 	///		Method to capture the left curly bracket of main method "{"
 	///		Also helps in checking whether we're in right file or not
 	while (std::getline(mainFile, line)) {
 		if (strstr(line.c_str(), "#include") != NULL)
-			includes += line + "\n";
-		if (strstr(line.c_str(), "using namespace") != NULL)
-			usingNamespaces += line + "\n";
+			includesStr += line + "\n";
+		else if (strstr(line.c_str(), "using namespace") != NULL)
+			usingNamespacesStr += line + "\n";
+		else if (searchingSUVarDSemiColon) {
+			staticUnscopedVars[staticUnscpVarsNoDefLines.front().second].declarationNdDefinition += "\n" + line;
+			if (strstr(line.c_str(), ";") != NULL) {
+				searchingSUVarDSemiColon = false;
+				staticUnscpVarsNoDefLines.pop_front();
+			}
+		}
+		else if (searchingSUFuncDRParanthesis) {
+			staticUnscopedFunctions[staticUnscpFuncsNoDefLines.front().second].declarationNdDefinition += "\n" + line;
+			if (strstr(line.c_str(), "}") != NULL) {
+				searchingSUFuncDRParanthesis = false;
+				staticUnscpFuncsNoDefLines.pop_front();
+			}
+		}
 
+		///		Retrieve everything starting after '=' to first encountered semicolon and add it to
+		///		the suitable vector
+		if (!searchingSUVarDSemiColon && staticUnscpVarsNoDefLines.size() && lineNumber == staticUnscpVarsNoDefLines.front().first)
+			searchingSUVarDSemiColon = true;
+		else if (!searchingSUFuncDRParanthesis && staticUnscpFuncsNoDefLines.size() && lineNumber == staticUnscpFuncsNoDefLines.front().first)
+			searchingSUFuncDRParanthesis = true;
+
+		++lineNumber;
 		std::string lineNoSpaces = removeSpaces(line);
 		if (strstr(lineNoSpaces.c_str(), "main(") != NULL) {
 			std::cout << "main seen" << std::endl;
@@ -402,6 +453,7 @@ int main() {
 	}
 
 	bool recordFunctionBody = false;
+	bool searchingSMVarDSemiColon = false;		///		SMVD: Scoped Main Var Definition
 	std::string functionBody = "";
 	std::vector<std::pair<std::string,std::string>> buttonNameCodePair;
 
@@ -410,9 +462,25 @@ int main() {
 	///		not specified then a default button name i.e. Buttom_[index] is applied.
 	/// 
 	///		Block of code between {//< and }//< converts to staticText
+	/// 
+	///		Block of code between {//>int and }//>int converts to input
 
 	if (mainSeen) {
 		while (std::getline(mainFile, line)) {
+			if (searchingSMVarDSemiColon) {
+				size_t semicolonPos = line.find_last_of(";");
+				if (semicolonPos != std::string::npos) {
+					scopedMainVars[scpMainVarsNoDefLines.front().second].definition += line.substr(0, semicolonPos) + ")";
+					searchingSMVarDSemiColon = false;
+					scpMainVarsNoDefLines.pop_front();
+				}
+				else
+					scopedMainVars[scpMainVarsNoDefLines.front().second].definition += line;
+			}
+
+			if (!searchingSMVarDSemiColon && scpMainVarsNoDefLines.size() && lineNumber == scpMainVarsNoDefLines.front().second)
+				searchingSMVarDSemiColon = true;
+
 			std::string lineNoSpaces = removeSpaces(line);
 
 			if (recordFunctionBody==false && strstr(lineNoSpaces.c_str(), "{////") != NULL) {
@@ -429,6 +497,7 @@ int main() {
 				std::cout << line << std::endl;
 				functionBody += line + "\n";
 			}
+			++lineNumber;
 		}
 	}
 	else {
@@ -457,101 +526,117 @@ int main() {
 	}
 
 	std::string widgetsBoilerPlate = "\n"
-	"#include \"wx/wxprec.h\"\n"
-	"#ifndef WX_PRECOMP\n"
-	"#include \"wx/wx.h\"\n"
-	"#endif\n"
-	"#ifndef wxHAS_IMAGES_IN_RESOURCES\n"
-	"#include \"../sample.xpm\"\n"
-	"#endif\n"
-	"enum ID_COMMANDS {\n"
-	"	Minimal_Quit = wxID_EXIT,\n"
-	"	Minimal_About = wxID_ABOUT,\n"
-	"	Begin_User_Enum = wxID_HIGHEST + 1,\n"
-	"	Text_Ctrl_Log, \n";
+		"#include \"wx/wxprec.h\"\n"
+		"#ifndef WX_PRECOMP\n"
+		"#include \"wx/wx.h\"\n"
+		"#endif\n"
+		"#ifndef wxHAS_IMAGES_IN_RESOURCES\n"
+		"#include \"../sample.xpm\"\n"
+		"#endif\n";
+	widgetsBoilerPlate += includesStr;
+	widgetsBoilerPlate += usingNamespacesStr;
+	for (int i = 0; i < staticUnscopedVars.size(); ++i)
+		widgetsBoilerPlate += staticUnscopedVars[i].declarationNdDefinition + "\n";
+	for (int i = 0; i < globalUnscopeVars.size(); ++i)
+		widgetsBoilerPlate += globalUnscopeVars[i].declaration + "\n";
+	for (int i = 0; i < staticUnscopedFunctions.size(); ++i)
+		widgetsBoilerPlate += staticUnscopedFunctions[i].declarationNdDefinition + "\n";
+	for (int i = 0; i < globalUnscopedFunctions.size(); ++i)
+		widgetsBoilerPlate += globalUnscopedFunctions[i].declaration + "\n";
+	widgetsBoilerPlate += "enum ID_COMMANDS {\n"
+		"	Minimal_Quit = wxID_EXIT,\n"
+		"	Minimal_About = wxID_ABOUT,\n"
+		"	Begin_User_Enum = wxID_HIGHEST + 1,\n"
+		"	Text_Ctrl_Log, \n";
 	widgetsBoilerPlate += buttonEnums;
 	widgetsBoilerPlate += "};\n"
-	"class MyApp : public wxApp {\n"
-	"private:\n"
-	"public:\n"
-	"    virtual bool OnInit() wxOVERRIDE;\n"
-	"};\n"
-	"class MyFrame : public wxFrame {\n"
-	"private:\n"
-	"	wxTextCtrl* textctrlLog;\n"
-	"	wxStreamToTextRedirector* redirector;\n";
+		"class MyApp : public wxApp {\n"
+		"private:\n"
+		"public:\n"
+		"    virtual bool OnInit() wxOVERRIDE;\n"
+		"};\n"
+		"class MyFrame : public wxFrame {\n"
+		"private:\n"
+		"	wxTextCtrl* textctrlLog;\n"
+		"	wxStreamToTextRedirector* redirector;\n";
+	for (int i = 0; i < scopedMainVars.size(); ++i)
+		widgetsBoilerPlate += scopedMainVars[i].declaration + "\n";
 	widgetsBoilerPlate += buttonDecsAndDefs;
+
 	widgetsBoilerPlate += "public:\n"
-	"   MyFrame(const wxString& title);\n"
-	"   void OnQuit(wxCommandEvent& event);\n"
-	"   void OnAbout(wxCommandEvent& event);\n"
-	"   wxDECLARE_EVENT_TABLE();\n"
-	"};\n"
-	"wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)\n"
-	"EVT_MENU(ID_COMMANDS::Minimal_Quit, MyFrame::OnQuit)\n"
-	"EVT_MENU(ID_COMMANDS::Minimal_About, MyFrame::OnAbout)\n"
-	"wxEND_EVENT_TABLE()\n"
-	"wxIMPLEMENT_APP(MyApp);\n"
-	"bool MyApp::OnInit() {\n"
-	"	if (!wxApp::OnInit())\n"
-	"		return false;\n"
-	"	MyFrame* frame = new MyFrame(\"windoow\");\n"
-	"	frame->Show(true);\n"
-	"	return true;\n"
-	"}\n"
-	"MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {\n"
-	"	SetIcon(wxICON(sample));\n"
-	"   #if wxUSE_MENUBAR\n"
-	"   wxMenu* fileMenu = new wxMenu;\n"
-	"   wxMenu* helpMenu = new wxMenu;\n"
-	"   helpMenu->Append(ID_COMMANDS::Minimal_About, \"&About\tF1\", \"Show about dialog\");\n"
-	"   fileMenu->Append(ID_COMMANDS::Minimal_Quit, \"E&xit\tAlt-X\", \"Quit this program\");\n"
-	"   wxMenuBar* menuBar = new wxMenuBar();\n"
-	"   menuBar->Append(fileMenu, \"&File\");\n"
-	"   menuBar->Append(helpMenu, \"&Help\");\n"
-	"	wxPanel *panel = new wxPanel(this, -1);\n"
-	"	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);\n"
-	"		wxScrolledWindow* panel2 = new wxScrolledWindow(panel, -1);\n"
-	"			wxBoxSizer* vbox2 = new wxBoxSizer(wxVERTICAL);\n";
+		"   MyFrame(const wxString& title);\n"
+		"   void OnQuit(wxCommandEvent& event);\n"
+		"   void OnAbout(wxCommandEvent& event);\n"
+		"   wxDECLARE_EVENT_TABLE();\n"
+		"};\n"
+		"wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)\n"
+		"EVT_MENU(ID_COMMANDS::Minimal_Quit, MyFrame::OnQuit)\n"
+		"EVT_MENU(ID_COMMANDS::Minimal_About, MyFrame::OnAbout)\n"
+		"wxEND_EVENT_TABLE()\n"
+		"wxIMPLEMENT_APP(MyApp);\n"
+		"bool MyApp::OnInit() {\n"
+		"	if (!wxApp::OnInit())\n"
+		"		return false;\n"
+		"	MyFrame* frame = new MyFrame(\"windoow\");\n"
+		"	frame->Show(true);\n"
+		"	return true;\n"
+		"}\n"
+		"MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title)\n";
+	for (int i = 0; i < scopedMainVars.size(); ++i)
+		widgetsBoilerPlate += "," + scopedMainVars[i].definition;
+	widgetsBoilerPlate += "{\n"
+		"	SetIcon(wxICON(sample));\n"
+		"   #if wxUSE_MENUBAR\n"
+		"   wxMenu* fileMenu = new wxMenu;\n"
+		"   wxMenu* helpMenu = new wxMenu;\n"
+		"   helpMenu->Append(ID_COMMANDS::Minimal_About, \"&About\tF1\", \"Show about dialog\");\n"
+		"   fileMenu->Append(ID_COMMANDS::Minimal_Quit, \"E&xit\tAlt-X\", \"Quit this program\");\n"
+		"   wxMenuBar* menuBar = new wxMenuBar();\n"
+		"   menuBar->Append(fileMenu, \"&File\");\n"
+		"   menuBar->Append(helpMenu, \"&Help\");\n"
+		"	wxPanel *panel = new wxPanel(this, -1);\n"
+		"	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);\n"
+		"		wxScrolledWindow* panel2 = new wxScrolledWindow(panel, -1);\n"
+		"			wxBoxSizer* vbox2 = new wxBoxSizer(wxVERTICAL);\n";
 	widgetsBoilerPlate += buttonUI;
 	widgetsBoilerPlate += "\t\tpanel2->SetScrollRate(5, 5);\n"
-	"		panel2->SetSizer(vbox2);\n"
-	"	vbox->Add(panel2, 1, wxEXPAND | wxALL, 10);\n"
-	"	textctrlLog = new wxTextCtrl(panel, ID_COMMANDS::Text_Ctrl_Log, wxT(\"\"), wxPoint(-1, -1), wxSize(-1, -1), wxTE_MULTILINE);\n"
-	"	textctrlLog->SetEditable(false);\n"
-	"	vbox->Add(textctrlLog, 1, wxEXPAND, 0);\n"
-	"	panel->SetSizer(vbox);\n"
-	"   SetMenuBar(menuBar);\n"
-	"   #else // !wxUSE_MENUBAR\n"
-	"   wxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);\n"
-	"   wxButton* aboutBtn = new wxButton(this, wxID_ANY, \"About...\");\n"
-	"   aboutBtn->Bind(wxEVT_BUTTON, &MyFrame::OnAbout, this);\n"
-	"   sizer->Add(aboutBtn, wxSizerFlags().Center());\n"
-	"   SetSizer(sizer);\n"
-	"   #endif // wxUSE_MENUBAR/!wxUSE_MENUBAR\n"
-	"   #if wxUSE_STATUSBAR\n"
-	"   CreateStatusBar(2);\n"
-	"   SetStatusText(\"Welcome to wxWidgets!\");\n"
-	"   #endif // wxUSE_STATUSBAR\n"
-	"	redirector = new wxStreamToTextRedirector(textctrlLog);\n"
-	"}\n"
-	"void MyFrame::OnQuit(wxCommandEvent & WXUNUSED(event)) {\n"
-	"   Close(true);\n"
-	"}\n"
-	"void MyFrame::OnAbout(wxCommandEvent & WXUNUSED(event)) {\n"
-	"   wxMessageBox(wxString::Format\n"
-	"   (\n"
-	"       \"Welcome to %s!\\n\"\n"
-	"       \"\\n\"\n"
-	"       \"This is the minimal wxWidgets sample\\n\"\n"
-	"       \"running under %s.\",\n"
-	"       wxVERSION_STRING,\n"
-	"       wxGetOsDescription()\n"
-	"   ),\n"
-	"   \"About wxWidgets minimal sample\",\n"
-	"   wxOK | wxICON_INFORMATION,\n"
-	"   this);\n"
-	"}";
+		"		panel2->SetSizer(vbox2);\n"
+		"	vbox->Add(panel2, 1, wxEXPAND | wxALL, 10);\n"
+		"	textctrlLog = new wxTextCtrl(panel, ID_COMMANDS::Text_Ctrl_Log, wxT(\"\"), wxPoint(-1, -1), wxSize(-1, -1), wxTE_MULTILINE);\n"
+		"	textctrlLog->SetEditable(false);\n"
+		"	vbox->Add(textctrlLog, 1, wxEXPAND, 0);\n"
+		"	panel->SetSizer(vbox);\n"
+		"   SetMenuBar(menuBar);\n"
+		"   #else // !wxUSE_MENUBAR\n"
+		"   wxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);\n"
+		"   wxButton* aboutBtn = new wxButton(this, wxID_ANY, \"About...\");\n"
+		"   aboutBtn->Bind(wxEVT_BUTTON, &MyFrame::OnAbout, this);\n"
+		"   sizer->Add(aboutBtn, wxSizerFlags().Center());\n"
+		"   SetSizer(sizer);\n"
+		"   #endif // wxUSE_MENUBAR/!wxUSE_MENUBAR\n"
+		"   #if wxUSE_STATUSBAR\n"
+		"   CreateStatusBar(2);\n"
+		"   SetStatusText(\"Welcome to wxWidgets!\");\n"
+		"   #endif // wxUSE_STATUSBAR\n"
+		"	redirector = new wxStreamToTextRedirector(textctrlLog);\n"
+		"}\n"
+		"void MyFrame::OnQuit(wxCommandEvent & WXUNUSED(event)) {\n"
+		"   Close(true);\n"
+		"}\n"
+		"void MyFrame::OnAbout(wxCommandEvent & WXUNUSED(event)) {\n"
+		"   wxMessageBox(wxString::Format\n"
+		"   (\n"
+		"       \"Welcome to %s!\\n\"\n"
+		"       \"\\n\"\n"
+		"       \"This is the minimal wxWidgets sample\\n\"\n"
+		"       \"running under %s.\",\n"
+		"       wxVERSION_STRING,\n"
+		"       wxGetOsDescription()\n"
+		"   ),\n"
+		"   \"About wxWidgets minimal sample\",\n"
+		"   wxOK | wxICON_INFORMATION,\n"
+		"   this);\n"
+		"}";
 
 	std::ofstream outWidgetFile(getDiretoryFromPath(mainFilePath) + "/C2GWxWidgets.cpp");
 	outWidgetFile << widgetsBoilerPlate << std::endl;

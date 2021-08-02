@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-MyClass::MyClass() {
+MyClass::MyClass(int x) {
 	std::cout << "My class constructed executed" << std::endl;
 }
 
