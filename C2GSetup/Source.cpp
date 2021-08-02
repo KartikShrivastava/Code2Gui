@@ -382,7 +382,7 @@ void SetupFrame::OnNextPage(wxCommandEvent& event) {
                 textCtrlTitle->SetHint(wxT("Title required"));
                 incompleteFields = true;
             }
-            if (incompleteFields) {
+            if (!incompleteFields) {
                 SetStatusText("Some fields are missing");
                 return;
             }
@@ -433,9 +433,6 @@ void SetupFrame::OnCancelSetup(wxCommandEvent& event) {
     {
         Close(true);
     }
-}
-
-void SetupFrame::OnInstall(wxCommandEvent& event) {
 }
 
 void SetupFrame::OnFileBrowser(wxCommandEvent& event) {
@@ -554,4 +551,28 @@ void SetupFrame::OnCheckCheckBoxX64Release(wxCommandEvent& event) {
         else if (checkBoxX64Debug->GetValue() == wxCHK_UNCHECKED)
             checkBoxX64->Set3StateValue(wxCHK_UNDETERMINED);
     }
+}
+
+std::string SetupFrame::RemoveSpaces(const std::string& line) {
+    std::string stringNoSpaces = "";
+    for (int i = 0; i < line.length(); ++i)
+        if (line[i] != '\t' && line[i] != ' ')
+            stringNoSpaces += line[i];
+    return stringNoSpaces;
+}
+
+std::string SetupFrame::GetDiretoryFromPath(const std::string& path) {
+    size_t pos = path.find_last_of("\\/");
+    return (pos == std::string::npos) ? "" : path.substr(0, pos);
+}
+
+void SetupFrame::OnInstall(wxCommandEvent& event) {
+    ///     Edit the .vcxproj and .vcxproj.filters file to add
+    ///     1. wxwidgets property sheet
+    ///     2. C2GMetadata.txt and C2GWxWidgets.cpp file
+
+    ///     Add Custom Build Tool instructions to the C2GMetadata.txt
+    
+    ///     Add wxwidget dll path to user environment variable
+
 }

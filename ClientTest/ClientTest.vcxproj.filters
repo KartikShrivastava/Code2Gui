@@ -21,7 +21,7 @@
     <ClCompile Include="MyClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Code2GuiWxSource.cpp">
+    <ClCompile Include="C2GWxWidgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="trash.cpp">
@@ -34,9 +34,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Code2GuiInfo.txt" />
+    <Text Include="trash.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="trash.txt" />
+    <CustomBuild Include="C2GMetadata.txt" />
   </ItemGroup>
 </Project>

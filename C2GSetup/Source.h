@@ -141,6 +141,11 @@ public:
     void OnCheckCheckBoxX64(wxCommandEvent& event);
     void OnCheckCheckBoxX64Debug(wxCommandEvent& event);
     void OnCheckCheckBoxX64Release(wxCommandEvent& event);
+
+    std::string RemoveSpaces(const std::string& line);
+
+    std::string GetDiretoryFromPath(const std::string& path);
+
     ///     Any class wishing to process wxWidgets events must use this macro
     //wxDECLARE_EVENT_TABLE();
 };

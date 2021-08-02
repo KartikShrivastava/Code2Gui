@@ -59,15 +59,19 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\ProjectsArchive\wxClientDynamicBinaries\wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\ProjectsArchive\wxClientDynamicBinaries\wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\ProjectsArchive\wxClientDynamicBinaries\wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\ProjectsArchive\wxClientDynamicBinaries\wxwidgets.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -98,7 +102,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -112,7 +116,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -126,7 +130,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -140,14 +144,14 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Code2GuiWxSource.cpp" />
+    <ClCompile Include="C2GWxWidgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyClass.cpp" />
     <ClCompile Include="trash.cpp" />
@@ -156,7 +160,7 @@
     <ClInclude Include="MyClass.h" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Code2GuiInfo.txt">
+    <CustomBuild Include="C2GMetadata.txt">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating WxWidgets code</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\test.txt</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating WxWidgets code</Message>
@@ -165,10 +169,10 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\test.txt</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating WxWidgets code</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\test.txt</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\Code2Gui.exe" "C:\Home\Projects\Github\Code2Gui\ClientTest\main.cpp" "Hey"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\Code2Gui.exe" "C:\Home\Projects\Github\Code2Gui\ClientTest\main.cpp" "Hey"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\Code2Gui.exe" "C:\Home\Projects\Github\Code2Gui\ClientTest\main.cpp" "Hey"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\Code2Gui.exe" "C:\Home\Projects\Github\Code2Gui\ClientTest\main.cpp" "Hey"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
