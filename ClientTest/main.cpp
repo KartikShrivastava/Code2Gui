@@ -1,50 +1,59 @@
-///		include all the files, irrespective of redundancy
 #include <iostream>
 #include <vector>
 #include "MyClass.h"
 
-///		include using namespace lines
 using namespace std;
 
-///		include function declarations as externs(if non-static)
-vector<int> foo(int x) {
+vector<int> foo(int x)
+{
 	return vector<int>{2};
 }
 
-///		include whole function definition(if static)
+static void Print(int val)
+{
+	std::cout << val << std::endl;
+}
 
 ///		include global variables as externs(if non-static)
 int glob = 1;
 
 ///		include whole variable definition(if non-static)
-static int glob2 = 2;
+static int glob2 = 22121;
 
 int main( int argc, char** argv)
 {
-	std::cout << "Main entry point!" << std::endl;
-	
+	{///lbl
+		std::cout << "Main entry point!" << std::endl;
+	}///
+
 	int xx = 1;
-	vector<int> xz;
-	MyClass obj(xx);
+	vector<int> xzx;
+	MyClass obj(1);
 
 	xx = 1;
 
-	{//(
-		xz = foo(xx);
-	}//(
+	{///btn
+		xzx = foo(xx);
+	}///
 
-	{//<
-		std::cout << "Print hello world" << std::endl;
-	}//<
+	int zz;
 
-	{//(
-		for (int i = 0; i < xz.size(); ++i)
-			std::cout << xz[i] << std::endl;
-	}//(
+	{///get>int
+		std::cin >> zz;
+	}///
 
-	{//>
+	{///lbl
+		std::cout << "call it" << std::endl;
+	}///
 
-	}//>
+	{///btn
+		Print(glob2);
+	}///
+
+	{///btn
+		for (int i = 0; i < xzx.size(); ++i)
+			std::cout << xzx[i] << std::endl;
+	}///
 
 	return 0;
 }

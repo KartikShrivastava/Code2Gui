@@ -24,17 +24,11 @@
     <ClCompile Include="C2GWxWidgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="trash.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="trash.txt" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C2GMetadata.txt" />

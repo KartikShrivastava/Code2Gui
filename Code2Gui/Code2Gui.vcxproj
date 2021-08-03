@@ -152,16 +152,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\CodeToGui.cpp" />
     <ClCompile Include="src\WxWidgets.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\CodeToGui.h" />
     <ClInclude Include="src\GuiApp.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="src\test.vert">
-      <FileType>Document</FileType>
-    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

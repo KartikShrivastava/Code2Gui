@@ -154,7 +154,6 @@
     <ClCompile Include="C2GWxWidgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyClass.cpp" />
-    <ClCompile Include="trash.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyClass.h" />
@@ -174,9 +173,6 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="trash.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
