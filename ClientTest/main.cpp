@@ -9,8 +9,7 @@ vector<int> foo(int x)
 	return vector<int>{2};
 }
 
-static void Print(int val)
-{
+static void Print(int val) {
 	std::cout << val << std::endl;
 }
 

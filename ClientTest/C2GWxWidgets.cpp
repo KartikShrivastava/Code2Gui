@@ -13,8 +13,7 @@
 using namespace std;
 static int glob2 = 22121;
 extern int glob ;
-static void Print(int val)
-{
+static void Print(int val) {
 	std::cout << val << std::endl;
 }
 extern vector<int> foo(int x);

@@ -377,7 +377,7 @@ int CodeToGui::LoadInfoFromMainFile() {
 			staticUnscopedFunctions[staticUnscpFuncsNoDefLines.front().second].declarationNdDefinition += "\n" + line;
 			if (strstr(line.c_str(), "}") != NULL) {
 				searchingSUFuncDRParanthesis = false;
-				staticUnscopedFunctions[staticUnscpFuncsNoDefLines.front().second].definitionExists += "}\n";
+				staticUnscopedFunctions[staticUnscpFuncsNoDefLines.front().second].definitionExists = true;
 				staticUnscpFuncsNoDefLines.pop_front();
 			}
 		}
@@ -536,42 +536,14 @@ int CodeToGui::LoadInfoFromMainFile() {
 
 	mainFile.close();
 
-
-
-
-	for (int i = 0; i < buttonName_CodePair.size(); ++i) {
-		allWxButtonFuncDecsAndDefs += "    void On" + buttonName_CodePair[i].first + "(wxCommandEvent& event) {\n";
-		allWxButtonFuncDecsAndDefs += buttonName_CodePair[i].second;
-		allWxButtonFuncDecsAndDefs += "    }\n";
-
-		allWxButtonIdStr += "    " + buttonName_CodePair[i].first + ",\n";
-	}
-
-	std::string staticTextIdsEnumStr = "";
-
-	for (int i = 0; i < statTxtName_BodyPair.size(); ++i) {
-		allWxStaticTextIdStr += "    " + statTxtName_BodyPair[i].first + ",\n";
-	}
-
-	for (int i = 0; i < txtCtrlRefVarName_TypePair.size(); ++i) {
-		allWxTextCtrlIdStr += "    txtCtrl_" + txtCtrlRefVarName_TypePair[i].first + "_id,\n";
-		allWxTextCtrlMemberDeclarationStr += "    wxTextCtrl* txtCtrl_" + txtCtrlRefVarName_TypePair[i].first + ";\n";
-
-		allWxTextCtrlReferedVarDefinitions += "        if(event.GetId() == ID_COMMANDS::txtCtrl_" + txtCtrlRefVarName_TypePair[i].first + "_id) {\n";
-		allWxTextCtrlReferedVarDefinitions += "            std::string val(txtCtrl_" + txtCtrlRefVarName_TypePair[i].first + "->GetValue());\n";
-		if (strstr(txtCtrlRefVarName_TypePair[i].second.c_str(), "int") != NULL) {
-			allWxTextCtrlReferedVarDefinitions += "            " + txtCtrlRefVarName_TypePair[i].first + " = std::stoi(val);\n";
-		}
-		else if (strstr(txtCtrlRefVarName_TypePair[i].second.c_str(), "float") != NULL) {
-			allWxTextCtrlReferedVarDefinitions += "            " + txtCtrlRefVarName_TypePair[i].first + " = std::stof(val);\n";
-		}
-		else {
-			allWxTextCtrlReferedVarDefinitions += "            " + txtCtrlRefVarName_TypePair[i].first + " = val;\n";
-		}
-		allWxTextCtrlReferedVarDefinitions += "        }\n";
-	}
-
-
+	SaveButtonIds(buttonName_CodePair);
+	FormatButtonCallbacks(buttonName_CodePair);
+	
+	SaveStaticTextIds(statTxtName_BodyPair);
+	
+	SaveTextCtrlIds(txtCtrlRefVarName_TypePair);
+	FormatTextCtrlDeclarations(txtCtrlRefVarName_TypePair);
+	FormatTextCtrlCallbacks(txtCtrlRefVarName_TypePair);
 
 	return 0;
 }
@@ -587,6 +559,55 @@ std::string CodeToGui::RemoveSpaces(const std::string& line) {
 std::string CodeToGui::GetDiretoryFromPath(const std::string& path) {
 	size_t pos = path.find_last_of("\\/");
 	return (pos == std::string::npos) ? "" : path.substr(0, pos);
+}
+
+void CodeToGui::SaveButtonIds(const std::vector<std::pair<std::string, std::string>>& buttonName_CodePair) {
+	for (int i = 0; i < buttonName_CodePair.size(); ++i) {
+		allWxButtonIdStr += "    " + buttonName_CodePair[i].first + ",\n";
+	}
+}
+
+void CodeToGui::FormatButtonCallbacks(const std::vector<std::pair<std::string, std::string>>& buttonName_CodePair) {
+	for (int i = 0; i < buttonName_CodePair.size(); ++i) {
+		allWxButtonFuncDecsAndDefs += "    void On" + buttonName_CodePair[i].first + "(wxCommandEvent& event) {\n";
+		allWxButtonFuncDecsAndDefs += buttonName_CodePair[i].second;
+		allWxButtonFuncDecsAndDefs += "    }\n";
+	}
+}
+
+void CodeToGui::SaveStaticTextIds(const std::vector<std::pair<std::string, std::string>>& statTxtName_BodyPair) {
+	for (int i = 0; i < statTxtName_BodyPair.size(); ++i) {
+		allWxStaticTextIdStr += "    " + statTxtName_BodyPair[i].first + ",\n";
+	}
+}
+
+void CodeToGui::SaveTextCtrlIds(const std::vector<std::pair<std::string, std::string>>& txtCtrlRefVarName_TypePair) {
+	for (int i = 0; i < txtCtrlRefVarName_TypePair.size(); ++i) {
+		allWxTextCtrlIdStr += "    txtCtrl_" + txtCtrlRefVarName_TypePair[i].first + "_id,\n";
+	}
+}
+
+void CodeToGui::FormatTextCtrlDeclarations(const std::vector<std::pair<std::string, std::string>>& txtCtrlRefVarName_TypePair) {
+	for (int i = 0; i < txtCtrlRefVarName_TypePair.size(); ++i) {
+		allWxTextCtrlMemberDeclarationStr += "    wxTextCtrl* txtCtrl_" + txtCtrlRefVarName_TypePair[i].first + ";\n";
+	}
+}
+
+void CodeToGui::FormatTextCtrlCallbacks(const std::vector<std::pair<std::string, std::string>>& txtCtrlRefVarName_TypePair) {
+	for (int i = 0; i < txtCtrlRefVarName_TypePair.size(); ++i) {
+		allWxTextCtrlReferedVarDefinitions += "        if(event.GetId() == ID_COMMANDS::txtCtrl_" + txtCtrlRefVarName_TypePair[i].first + "_id) {\n";
+		allWxTextCtrlReferedVarDefinitions += "            std::string val(txtCtrl_" + txtCtrlRefVarName_TypePair[i].first + "->GetValue());\n";
+		if (strstr(txtCtrlRefVarName_TypePair[i].second.c_str(), "int") != NULL) {
+			allWxTextCtrlReferedVarDefinitions += "            " + txtCtrlRefVarName_TypePair[i].first + " = std::stoi(val);\n";
+		}
+		else if (strstr(txtCtrlRefVarName_TypePair[i].second.c_str(), "float") != NULL) {
+			allWxTextCtrlReferedVarDefinitions += "            " + txtCtrlRefVarName_TypePair[i].first + " = std::stof(val);\n";
+		}
+		else {
+			allWxTextCtrlReferedVarDefinitions += "            " + txtCtrlRefVarName_TypePair[i].first + " = val;\n";
+		}
+		allWxTextCtrlReferedVarDefinitions += "        }\n";
+	}
 }
 
 void CodeToGui::GenerateGuiBoilerplateCode() {

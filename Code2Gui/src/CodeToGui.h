@@ -108,6 +108,18 @@ private:
 
 	std::string GetDiretoryFromPath(const std::string& path);
 
+	void SaveButtonIds(const std::vector<std::pair<std::string, std::string>>& buttonName_CodePair);
+
+	void FormatButtonCallbacks(const std::vector<std::pair<std::string, std::string>>& buttonName_CodePair);
+
+	void SaveStaticTextIds(const std::vector<std::pair<std::string, std::string>>& statTxtName_BodyPair);
+
+	void SaveTextCtrlIds(const std::vector<std::pair<std::string, std::string>>& txtCtrlRefVarName_TypePair);
+
+	void FormatTextCtrlCallbacks(const std::vector<std::pair<std::string, std::string>>& txtCtrlRefVarName_TypePair);
+
+	void FormatTextCtrlDeclarations(const std::vector<std::pair<std::string, std::string>>& txtCtrlRefVarName_TypePair);
+
 public:
 
 	CodeToGui();
