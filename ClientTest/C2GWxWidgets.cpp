@@ -27,6 +27,7 @@ enum ID_COMMANDS {
     Button_1,
     Button_2,
     StaticText_0,
+    StaticText_1,
     txtCtrl_zz_id,
 };
 class MyApp : public wxApp {
@@ -98,14 +99,16 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title)
                 wxTextValidator textValidator;
                 floatValidator.SetRange(-FLT_MAX, FLT_MAX);
                 intValidator.SetRange(INT_MIN, INT_MAX);
+                wxStaticText* StaticText_0 = new wxStaticText(panel2, ID_COMMANDS::StaticText_0, "Main entry point!");
+            vbox2->Add(StaticText_0);
                 wxButton* Button_0 = new wxButton(panel2, ID_COMMANDS::Button_0, "Button_0");
                 Button_0->Connect(ID_COMMANDS::Button_0, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MyFrame::OnButton_0), NULL, this);
             vbox2->Add(Button_0);
                 txtCtrl_zz = new wxTextCtrl(panel2, ID_COMMANDS::txtCtrl_zz_id, "", wxDefaultPosition, wxDefaultSize, 0, intValidator);
                 txtCtrl_zz->Connect(ID_COMMANDS::txtCtrl_zz_id, wxEVT_COMMAND_TEXT_UPDATED, wxObjectEventFunction(&MyFrame::OnTextCtrlUpdate), NULL, this);
             vbox2->Add(txtCtrl_zz);
-                wxStaticText* StaticText_0 = new wxStaticText(panel2, ID_COMMANDS::StaticText_0, "call it");
-            vbox2->Add(StaticText_0);
+                wxStaticText* StaticText_1 = new wxStaticText(panel2, ID_COMMANDS::StaticText_1, "call it");
+            vbox2->Add(StaticText_1);
                 wxButton* Button_1 = new wxButton(panel2, ID_COMMANDS::Button_1, "Button_1");
                 Button_1->Connect(ID_COMMANDS::Button_1, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MyFrame::OnButton_1), NULL, this);
             vbox2->Add(Button_1);
