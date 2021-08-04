@@ -60,7 +60,7 @@ int CodeToGui::LoadInfoFromTagFile(const std::string& metadataFilePath) {
 	std::unordered_set<std::string> capturedTitle;
 
 	while (std::getline(ctagsFile, line)) {
-		if (line[0] == '!')
+		if (line[0] == '!' || (strstr(line.c_str(), "endl") != NULL))
 			continue;
 
 		std::istringstream iss(line);
@@ -392,7 +392,7 @@ int CodeToGui::LoadInfoFromMainFile() {
 		++lineNumber;
 		std::string lineNoSpaces = RemoveSpaces(line);
 		if (strstr(lineNoSpaces.c_str(), "main(") != NULL) {
-			std::cout << "main seen" << std::endl;
+			//std::cout << "main seen" << std::endl;
 			mainSeen = true;
 			break;
 		}
@@ -439,13 +439,13 @@ int CodeToGui::LoadInfoFromMainFile() {
 
 			if (recordFunctionBody == false && recordStaticTextBody == false && recordTextCtrlVar == false
 				&& strstr(lineNoSpaces.c_str(), "{///btn") != NULL) {
-				std::cout << line << std::endl;
+				//std::cout << line << std::endl;
 				recordFunctionBody = true;
 				functionBody = "";
 			}
 			else if (recordFunctionBody && recordStaticTextBody == false && recordTextCtrlVar == false
 				&& strstr(lineNoSpaces.c_str(), "}///") != NULL) {
-				std::cout << line << std::endl;
+				//std::cout << line << std::endl;
 				recordFunctionBody = false;
 				buttonName_CodePair.push_back({ "Button_" + std::to_string(buttonName_CodePair.size()), functionBody });
 
@@ -455,9 +455,10 @@ int CodeToGui::LoadInfoFromMainFile() {
 				wxUiLayoutCombined += "                " + buttonName_CodePair[index].first + "->Connect(ID_COMMANDS::" + buttonName_CodePair[index].first +
 					", wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MyFrame::On" + buttonName_CodePair[index].first + "), NULL, this);\n";
 				wxUiLayoutCombined += "            vbox2->Add(" + buttonName_CodePair[index].first + ");\n";
+				wxUiLayoutCombined += "            vbox2->Add(-1,10);\n";
 			}
 			else if (recordFunctionBody && recordStaticTextBody == false && recordTextCtrlVar == false) {
-				std::cout << line << std::endl;
+				//std::cout << line << std::endl;
 				functionBody += line + "\n";
 			}
 
@@ -475,15 +476,16 @@ int CodeToGui::LoadInfoFromMainFile() {
 				wxUiLayoutCombined += "                wxStaticText* " + statTxtName_BodyPair[index].first + " = new wxStaticText(panel2, ID_COMMANDS::" +
 					statTxtName_BodyPair[index].first + ", \"" + statTxtName_BodyPair[index].second + "\");\n";
 				wxUiLayoutCombined += "            vbox2->Add(" + statTxtName_BodyPair[index].first + ");\n";
+				wxUiLayoutCombined += "            vbox2->Add(-1,10);\n";
 			}
 			else if (recordStaticTextBody && recordFunctionBody == false && recordTextCtrlVar == false) {
-				std::cout << line << std::endl;
+				//std::cout << line << std::endl;
 				size_t firstDQuote = line.find_first_of("\"");
 				size_t lastDQuote = line.find_last_of("\"");
 				if (staticTextBody == "")
 					staticTextBody += line.substr(firstDQuote + 1, lastDQuote - firstDQuote - 1);
 				else
-					staticTextBody += "\n" + line.substr(firstDQuote + 1, lastDQuote - firstDQuote - 1);
+					staticTextBody += "\\n" + line.substr(firstDQuote + 1, lastDQuote - firstDQuote - 1);
 			}
 
 			if (recordTextCtrlVar == false && recordStaticTextBody == false && recordFunctionBody == false
@@ -497,7 +499,7 @@ int CodeToGui::LoadInfoFromMainFile() {
 				recordTextCtrlVar = false;
 			}
 			else if (recordTextCtrlVar && recordStaticTextBody == false && recordFunctionBody == false) {
-				std::cout << line << std::endl;
+				//std::cout << line << std::endl;
 				size_t rightAngPos = line.find_last_of(">");
 				size_t semicolonPos = line.find_last_of(";");
 				if (rightAngPos != std::string::npos && semicolonPos != std::string::npos) {
@@ -522,6 +524,7 @@ int CodeToGui::LoadInfoFromMainFile() {
 					wxUiLayoutCombined += "                txtCtrl_" + txtCtrlRefVarName_TypePair[index].first + "->Connect(ID_COMMANDS::" + "txtCtrl_" +
 						txtCtrlRefVarName_TypePair[index].first + "_id, wxEVT_COMMAND_TEXT_UPDATED, wxObjectEventFunction(&MyFrame::OnTextCtrlUpdate), NULL, this);\n";
 					wxUiLayoutCombined += "            vbox2->Add(txtCtrl_" + txtCtrlRefVarName_TypePair[index].first + ");\n";
+					wxUiLayoutCombined += "            vbox2->Add(-1,10);\n";
 				}
 			}
 
@@ -685,11 +688,11 @@ void CodeToGui::GenerateGuiBoilerplateCode() {
 		"bool MyApp::OnInit() {\n"
 		"    if (!wxApp::OnInit())\n"
 		"        return false;\n"
-		"    MyFrame* frame = new MyFrame(\"windoow\");\n"
+		"    MyFrame* frame = new MyFrame(\"CodeToGui\");\n"
 		"    frame->Show(true);\n"
 		"    return true;\n"
 		"}\n"
-		"MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title)\n";
+		"MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title, {-1,-1}, { 300, 350 })\n";
 
 	for (int i = 0; i < scopedMainVars.size(); ++i)
 		if (scopedMainVars[i].definitionExists)
@@ -702,6 +705,8 @@ void CodeToGui::GenerateGuiBoilerplateCode() {
 		"    wxMenu* helpMenu = new wxMenu;\n"
 		"    helpMenu->Append(ID_COMMANDS::Minimal_About, \"&About\tF1\", \"Show about dialog\");\n"
 		"    fileMenu->Append(ID_COMMANDS::Minimal_Quit, \"E&xit\tAlt-X\", \"Quit this program\");\n"
+		"    wxColour col1;\n"
+		"    col1.Set(wxT(\"#e3e3e3\"));\n"
 		"    wxMenuBar* menuBar = new wxMenuBar();\n"
 		"    menuBar->Append(fileMenu, \"&File\");\n"
 		"    menuBar->Append(helpMenu, \"&Help\");\n"
@@ -721,8 +726,9 @@ void CodeToGui::GenerateGuiBoilerplateCode() {
 	widgetsBoilerPlate += "\t\tpanel2->SetScrollRate(5, 5);\n"
 		"        panel2->SetSizer(vbox2);\n"
 		"    vbox->Add(panel2, 1, wxEXPAND | wxALL, 10);\n"
-		"    textctrlLog = new wxTextCtrl(panel, ID_COMMANDS::Text_Ctrl_Log, wxT(\"\"), wxPoint(-1, -1), wxSize(-1, -1), wxTE_MULTILINE);\n"
+		"    textctrlLog = new wxTextCtrl(panel, ID_COMMANDS::Text_Ctrl_Log, wxT(\"\"), wxPoint(-1, -1), wxSize(-1, -1), wxTE_MULTILINE|wxNO_BORDER);\n"
 		"    textctrlLog->SetEditable(false);\n"
+		"    textctrlLog->SetBackgroundColour(col1);\n"
 		"    vbox->Add(textctrlLog, 1, wxEXPAND, 0);\n"
 		"    panel->SetSizer(vbox);\n"
 		"    SetMenuBar(menuBar);\n"
@@ -734,8 +740,8 @@ void CodeToGui::GenerateGuiBoilerplateCode() {
 		"    SetSizer(sizer);\n"
 		"    #endif // wxUSE_MENUBAR/!wxUSE_MENUBAR\n"
 		"    #if wxUSE_STATUSBAR\n"
-		"    CreateStatusBar(2);\n"
-		"    SetStatusText(\"Welcome to wxWidgets!\");\n"
+		"    CreateStatusBar(1);\n"
+		"    SetStatusText(\"Welcome to CodeToGui demo!\");\n"
 		"    #endif // wxUSE_STATUSBAR\n"
 		"    redirector = new wxStreamToTextRedirector(textctrlLog);\n"
 		"}\n"

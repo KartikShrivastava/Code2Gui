@@ -8,26 +8,16 @@
 #endif
 #include <wx/valnum.h>
 #include <iostream>
-#include <vector>
-#include "MyClass.h"
 using namespace std;
-static int glob2 = 22121;
-extern int glob ;
-static void Print(int val) {
-	std::cout << val << std::endl;
-}
-extern vector<int> foo(int x);
+extern int Square(int x) ;
 enum ID_COMMANDS {
     Minimal_Quit = wxID_EXIT,
     Minimal_About = wxID_ABOUT,
     Begin_User_Enum = wxID_HIGHEST + 1,
     Text_Ctrl_Log, 
     Button_0,
-    Button_1,
-    Button_2,
     StaticText_0,
-    StaticText_1,
-    txtCtrl_zz_id,
+    txtCtrl_num_id,
 };
 class MyApp : public wxApp {
 private:
@@ -38,26 +28,19 @@ class MyFrame : public wxFrame {
 private:
     wxTextCtrl* textctrlLog;
     wxStreamToTextRedirector* redirector;
-    int xx ;
-    vector<int> xzx;
-    int zz;
-    wxTextCtrl* txtCtrl_zz;
+    int num;
+    int result;
+    wxTextCtrl* txtCtrl_num;
 
     void OnTextCtrlUpdate(wxCommandEvent& event) {
-        if(event.GetId() == ID_COMMANDS::txtCtrl_zz_id) {
-            std::string val(txtCtrl_zz->GetValue());
-            zz = std::stoi(val);
+        if(event.GetId() == ID_COMMANDS::txtCtrl_num_id) {
+            std::string val(txtCtrl_num->GetValue());
+            num = std::stoi(val);
         }
     }
     void OnButton_0(wxCommandEvent& event) {
-		xzx = foo(xx);
-    }
-    void OnButton_1(wxCommandEvent& event) {
-		Print(glob2);
-    }
-    void OnButton_2(wxCommandEvent& event) {
-		for (int i = 0; i < xzx.size(); ++i)
-			std::cout << xzx[i] << std::endl;
+	result = Square(num);
+	cout << "Square of number: " << result << endl;
     }
 public:
     MyFrame(const wxString& title);
@@ -73,18 +56,20 @@ wxIMPLEMENT_APP(MyApp);
 bool MyApp::OnInit() {
     if (!wxApp::OnInit())
         return false;
-    MyFrame* frame = new MyFrame("windoow");
+    MyFrame* frame = new MyFrame("CodeToGui");
     frame->Show(true);
     return true;
 }
-MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title)
-,xx( 1){
+MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title, {-1,-1}, { 300, 350 })
+{
     SetIcon(wxICON(sample));
     #if wxUSE_MENUBAR
     wxMenu* fileMenu = new wxMenu;
     wxMenu* helpMenu = new wxMenu;
     helpMenu->Append(ID_COMMANDS::Minimal_About, "&About	F1", "Show about dialog");
     fileMenu->Append(ID_COMMANDS::Minimal_Quit, "E&xit	Alt-X", "Quit this program");
+    wxColour col1;
+    col1.Set(wxT("#e3e3e3"));
     wxMenuBar* menuBar = new wxMenuBar();
     menuBar->Append(fileMenu, "&File");
     menuBar->Append(helpMenu, "&Help");
@@ -98,27 +83,23 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title)
                 wxTextValidator textValidator;
                 floatValidator.SetRange(-FLT_MAX, FLT_MAX);
                 intValidator.SetRange(INT_MIN, INT_MAX);
-                wxStaticText* StaticText_0 = new wxStaticText(panel2, ID_COMMANDS::StaticText_0, "Main entry point!");
+                wxStaticText* StaticText_0 = new wxStaticText(panel2, ID_COMMANDS::StaticText_0, "Awesome console app, huh?\nEnter a number: ");
             vbox2->Add(StaticText_0);
+            vbox2->Add(-1,10);
+                txtCtrl_num = new wxTextCtrl(panel2, ID_COMMANDS::txtCtrl_num_id, "", wxDefaultPosition, wxDefaultSize, 0, intValidator);
+                txtCtrl_num->Connect(ID_COMMANDS::txtCtrl_num_id, wxEVT_COMMAND_TEXT_UPDATED, wxObjectEventFunction(&MyFrame::OnTextCtrlUpdate), NULL, this);
+            vbox2->Add(txtCtrl_num);
+            vbox2->Add(-1,10);
                 wxButton* Button_0 = new wxButton(panel2, ID_COMMANDS::Button_0, "Button_0");
                 Button_0->Connect(ID_COMMANDS::Button_0, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MyFrame::OnButton_0), NULL, this);
             vbox2->Add(Button_0);
-                txtCtrl_zz = new wxTextCtrl(panel2, ID_COMMANDS::txtCtrl_zz_id, "", wxDefaultPosition, wxDefaultSize, 0, intValidator);
-                txtCtrl_zz->Connect(ID_COMMANDS::txtCtrl_zz_id, wxEVT_COMMAND_TEXT_UPDATED, wxObjectEventFunction(&MyFrame::OnTextCtrlUpdate), NULL, this);
-            vbox2->Add(txtCtrl_zz);
-                wxStaticText* StaticText_1 = new wxStaticText(panel2, ID_COMMANDS::StaticText_1, "call it");
-            vbox2->Add(StaticText_1);
-                wxButton* Button_1 = new wxButton(panel2, ID_COMMANDS::Button_1, "Button_1");
-                Button_1->Connect(ID_COMMANDS::Button_1, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MyFrame::OnButton_1), NULL, this);
-            vbox2->Add(Button_1);
-                wxButton* Button_2 = new wxButton(panel2, ID_COMMANDS::Button_2, "Button_2");
-                Button_2->Connect(ID_COMMANDS::Button_2, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MyFrame::OnButton_2), NULL, this);
-            vbox2->Add(Button_2);
+            vbox2->Add(-1,10);
 		panel2->SetScrollRate(5, 5);
         panel2->SetSizer(vbox2);
     vbox->Add(panel2, 1, wxEXPAND | wxALL, 10);
-    textctrlLog = new wxTextCtrl(panel, ID_COMMANDS::Text_Ctrl_Log, wxT(""), wxPoint(-1, -1), wxSize(-1, -1), wxTE_MULTILINE);
+    textctrlLog = new wxTextCtrl(panel, ID_COMMANDS::Text_Ctrl_Log, wxT(""), wxPoint(-1, -1), wxSize(-1, -1), wxTE_MULTILINE|wxNO_BORDER);
     textctrlLog->SetEditable(false);
+    textctrlLog->SetBackgroundColour(col1);
     vbox->Add(textctrlLog, 1, wxEXPAND, 0);
     panel->SetSizer(vbox);
     SetMenuBar(menuBar);
@@ -130,8 +111,8 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title)
     SetSizer(sizer);
     #endif // wxUSE_MENUBAR/!wxUSE_MENUBAR
     #if wxUSE_STATUSBAR
-    CreateStatusBar(2);
-    SetStatusText("Welcome to wxWidgets!");
+    CreateStatusBar(1);
+    SetStatusText("Welcome to CodeToGui demo!");
     #endif // wxUSE_STATUSBAR
     redirector = new wxStreamToTextRedirector(textctrlLog);
 }

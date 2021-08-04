@@ -1,57 +1,27 @@
 #include <iostream>
-#include <vector>
-#include "MyClass.h"
 
 using namespace std;
 
-vector<int> foo(int x)
-{
-	return vector<int>{2};
+int Square(int x) {
+	return x*x;
 }
 
-static void Print(int val) {
-	std::cout << val << std::endl;
-}
-
-///		include global variables as externs(if non-static)
-int glob = 1;
-
-///		include whole variable definition(if non-static)
-static int glob2 = 22121;
-
-int main( int argc, char** argv)
-{
+int main( int argc, char** argv) {
 	{///lbl
-		std::cout << "Main entry point!" << std::endl;
+	cout << "Awesome console app, huh?" << endl;
+	cout << "Enter a number: " << endl;
 	}///
 
-	int xx = 1;
-	vector<int> xzx;
-	MyClass obj(1);
-
-	xx = 1;
-
-	{///btn
-		xzx = foo(xx);
-	}///
-
-	int zz;
-
+	int num;
 	{///get>int
-		std::cin >> zz;
+	cin >> num;
 	}///
-
-	{///lbl
-		std::cout << "call it" << std::endl;
-	}///
+	
+	int result;
 
 	{///btn
-		Print(glob2);
-	}///
-
-	{///btn
-		for (int i = 0; i < xzx.size(); ++i)
-			std::cout << xzx[i] << std::endl;
+	result = Square(num);
+	cout << "Square of number: " << result << endl;
 	}///
 
 	return 0;
