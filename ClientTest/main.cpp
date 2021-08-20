@@ -7,10 +7,16 @@ int Square(int x) {
 }
 
 int main( int argc, char** argv) {
+	{///layout
+	/// * * * *
+	/// * * * *
+	///   ***** 
+	}///
+
 	{///lbl
 	cout << "Awesome console app, huh?" << endl;
 	cout << "Enter a number: " << endl;
-	}///
+	}///0,0
 
 	int num;
 	{///get>int
@@ -19,7 +25,7 @@ int main( int argc, char** argv) {
 	
 	int result;
 
-	{///btn
+	{///btn>Get Square
 	result = Square(num);
 	cout << "Square of number: " << result << endl;
 	}///

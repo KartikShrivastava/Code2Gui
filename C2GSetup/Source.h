@@ -16,7 +16,7 @@
 #include "wx/simplebook.h"
 #include "wx/stattext.h"
 
-#include <fstream>
+#include <string>
 
 ///     Version history
 ///     1.0.0
@@ -68,9 +68,6 @@ public:
 class SetupFrame : public wxFrame
 {
 private:
-    bool incompleteFields = false;
-
-public:
     wxPanel* panelMain;
     wxBookCtrlBase* bookCtrl;
     wxBoxSizer* sizerFrame;
@@ -86,13 +83,19 @@ public:
     wxCheckBox* checkBoxX64Release;
     wxCheckBox* checkBoxX64Debug;
 
-    /// <summary>
-    /// Frame constructor
-    /// </summary>
-    /// <param name="title">Window title</param>
-    SetupFrame(const wxString& title);
+    wxButton* installBtnRef;
+    wxButton* cancelBtnRef;
 
-    ~SetupFrame();
+    bool incompleteFields = false;
+
+    bool foundX86;
+    bool foundX86Release;
+    bool foundX86Debug;
+    bool foundX64;
+    bool foundX64Release;
+    bool foundX64Debug;
+
+    bool integrationSuccessful = false;
 
     /// <summary>
     /// Event handler
@@ -123,11 +126,11 @@ public:
     void OnNextPage(wxCommandEvent& event);
 
     wxBookCtrlBase* GetCurrentBook() const { return bookCtrl; }
-    
+
     void OnCancelSetup(wxCommandEvent& event);
-    
+
     void OnPreviousPage(wxCommandEvent& event);
-    
+
     void OnInstall(wxCommandEvent& event);
 
     void OnFileBrowser(wxCommandEvent& event);
@@ -145,6 +148,25 @@ public:
     std::string RemoveSpaces(const std::string& line);
 
     std::string GetDiretoryFromPath(const std::string& path);
+
+    bool FindProjectConfigurations();
+    int ProcessVcxprojFile();
+    std::string GetExecutablePath();
+    int ProcessFiltersFiles();
+    int CreateProjectFiles();
+    int CreateBatFile();
+    int CreateEnvironmentVariable();
+    std::string GetFileName(const std::string& filePath);
+
+public:
+    /// <summary>
+    /// Frame constructor
+    /// </summary>
+    /// <param name="title">Window title</param>
+    SetupFrame(const wxString& title);
+
+    ~SetupFrame();
+
 
     ///     Any class wishing to process wxWidgets events must use this macro
     //wxDECLARE_EVENT_TABLE();

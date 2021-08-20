@@ -154,6 +154,8 @@
     <ClCompile Include="C2GWxWidgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyClass.cpp" />
+    <ClCompile Include="Source1.cpp" />
+    <ClCompile Include="Source2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyClass.h" />

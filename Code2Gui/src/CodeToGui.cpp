@@ -26,27 +26,68 @@ std::string CodeToGui::GetUserMainFilePath() {
 }
 
 int CodeToGui::LoadInfoFromMetadataFile(const std::string& metadataFilePath) {
-	std::string windowTitle;
-	std::string guiUpdateStr;
 	std::ifstream c2gUserMeta(metadataFilePath);
 	if (!c2gUserMeta.is_open())
 		return -1;
 
-	std::getline(c2gUserMeta, windowTitle);
-	std::getline(c2gUserMeta, userMainFilePath);
-	std::getline(c2gUserMeta, guiUpdateStr);
-	if (guiUpdateStr.compare("0") == 0)
-		guiUpdateAllowed = false;
-	else
-		guiUpdateAllowed = true;
+	std::string line;
+
+	std::string code2guiSetupPath;
+
+	while (std::getline(c2gUserMeta, line)) {
+		std::string lineNoSpaces = RemoveSpaces(line);
+		if (strstr(lineNoSpaces.c_str(), "window_title") != NULL) {
+			size_t pos = line.find_first_of(":");
+			if (pos != std::string::npos)
+				windowTitle = line.substr(pos + 1, line.length() - pos - 1);
+			else
+				windowTitle = "Hello world";
+		}
+		if (strstr(lineNoSpaces.c_str(), "rebuild_gui") != NULL) {
+			size_t pos = lineNoSpaces.find_first_of(":");
+			if (pos != std::string::npos) {
+				std::string searchSpace = lineNoSpaces.substr(pos + 1, lineNoSpaces.length() - pos - 1);
+				if (strstr(searchSpace.c_str(), "y") != NULL)
+					guiUpdateAllowed = true;
+				else
+					guiUpdateAllowed = false;
+			}
+			else
+				guiUpdateAllowed = true;
+		}
+		if (strstr(lineNoSpaces.c_str(), "entry_file_path") != NULL) {
+			size_t pos = lineNoSpaces.find_first_of(":");
+			if (pos != std::string::npos)
+				userMainFilePath = lineNoSpaces.substr(pos + 1, lineNoSpaces.length() - pos - 1);
+		}
+		if (strstr(lineNoSpaces.c_str(), "vcxproj_file_path") != NULL) {
+			size_t pos = lineNoSpaces.find_first_of(":");
+			if (pos != std::string::npos)
+				vcxprojFilePath = lineNoSpaces.substr(pos + 1, lineNoSpaces.length() - pos - 1);
+		}
+		if (strstr(lineNoSpaces.c_str(), "codetogui_setup_path") != NULL) {
+			size_t pos = lineNoSpaces.find_first_of(":");
+			if (pos != std::string::npos)
+				code2guiSetupPath = lineNoSpaces.substr(pos + 1, lineNoSpaces.length() - pos - 1);
+		}
+	}
+
+	if (userMainFilePath == "" || vcxprojFilePath == "" || code2guiSetupPath == "")
+		return -1;
+
+	std::string vcxprojDirPath = GetDiretoryFromPath(vcxprojFilePath);
+	std::string projectTitleNoSpcs = GetFileName(vcxprojFilePath);
+
+	std::string code2guiSetupDir = GetDiretoryFromPath(code2guiSetupPath);
+	ctagsFilePath = code2guiSetupDir + "\\bin\\tags_" + projectTitleNoSpcs + ".txt";
+
 	c2gUserMeta.close();
 
 	return 0;
 }
 
-int CodeToGui::LoadInfoFromTagFile(const std::string& metadataFilePath) {
-	std::ifstream ctagsFile("C:\\Home\\Projects\\Github\\Code2Gui\\binCode2Gui\\x64\\Debug\\tags.txt");
-	//std::ifstream ctagsFile("tags.txt");
+int CodeToGui::LoadInfoFromTagFile() {
+	std::ifstream ctagsFile(ctagsFilePath);
 	if (!ctagsFile.is_open())
 		return -1;
 
@@ -564,6 +605,12 @@ std::string CodeToGui::GetDiretoryFromPath(const std::string& path) {
 	return (pos == std::string::npos) ? "" : path.substr(0, pos);
 }
 
+std::string CodeToGui::GetFileName(const std::string& filePath) {
+	size_t pos = filePath.find_last_of("\\/");
+	size_t periodPos = filePath.find_first_of(".");
+	return (pos == std::string::npos || periodPos == std::string::npos) ? "" : filePath.substr(pos + 1, periodPos - pos - 1);
+}
+
 void CodeToGui::SaveButtonIds(const std::vector<std::pair<std::string, std::string>>& buttonName_CodePair) {
 	for (int i = 0; i < buttonName_CodePair.size(); ++i) {
 		allWxButtonIdStr += "    " + buttonName_CodePair[i].first + ",\n";
@@ -688,7 +735,9 @@ void CodeToGui::GenerateGuiBoilerplateCode() {
 		"bool MyApp::OnInit() {\n"
 		"    if (!wxApp::OnInit())\n"
 		"        return false;\n"
-		"    MyFrame* frame = new MyFrame(\"CodeToGui\");\n"
+		"    MyFrame* frame = new MyFrame(\"";
+	widgetsBoilerPlate += windowTitle;
+	widgetsBoilerPlate += "\");\n"
 		"    frame->Show(true);\n"
 		"    return true;\n"
 		"}\n"
@@ -763,7 +812,7 @@ void CodeToGui::GenerateGuiBoilerplateCode() {
 		"    this);\n"
 		"}";
 
-	std::ofstream outWidgetFile(GetDiretoryFromPath(userMainFilePath) + "/C2GWxWidgets.cpp");
+	std::ofstream outWidgetFile(GetDiretoryFromPath(vcxprojFilePath) + "/C2GWxWidgets.cpp");
 	outWidgetFile << widgetsBoilerPlate << std::endl;
 	outWidgetFile.close();
 }

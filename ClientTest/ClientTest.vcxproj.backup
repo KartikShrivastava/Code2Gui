@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{39672d27-e1f8-468e-b7db-333af3e77ca7}</ProjectGuid>
-    <RootNamespace>C2GSetup</RootNamespace>
+    <ProjectGuid>{70695b78-3789-4f24-8657-ee49677725b8}</ProjectGuid>
+    <RootNamespace>ClientTest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -76,23 +76,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)binC2GSetup\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)binC2GSetup\intermediates\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)binClientTest\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)binClientTest\intermediates\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)binC2GSetup\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)binC2GSetup\intermediates\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)binClientTest\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)binClientTest\intermediates\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)binC2GSetup\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)binC2GSetup\intermediates\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)binClientTest\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)binClientTest\intermediates\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)binC2GSetup\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)binC2GSetup\intermediates\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)binClientTest\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)binClientTest\intermediates\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -151,17 +151,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="C2GWxWidgets.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MyClass.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source.h" />
+    <ClInclude Include="MyClass.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="pics\icon.xpm" />
-    <None Include="pics\icon_64x64.xpm" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="pics\logo_96x96.png" />
+    <CustomBuild Include="C2GMetadata.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating WxWidgets code</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\test.txt</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating WxWidgets code</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\test.txt</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating WxWidgets code</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\test.txt</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating WxWidgets code</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\test.txt</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:\Home\Projects\Github\Code2Gui\binCode2Gui\x64\Debug\build.bat"</Command>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

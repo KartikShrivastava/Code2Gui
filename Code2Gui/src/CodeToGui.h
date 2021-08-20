@@ -54,7 +54,7 @@ private:
 	std::string userMainFilePath;
 	
 	bool guiUpdateAllowed;
-
+	
 	///		Array of line splits of those members which are unscoped(and global) present in main file
 	///		These varibles need extern keyword declaration in C2GWxWidgets file
 	std::vector<UnscopedNonStaticVars> globalUnscopeVars;
@@ -104,6 +104,12 @@ private:
 	///		Helpful in maintaining order of ui elements
 	std::string wxUiLayoutCombined;
 
+	std::string windowTitle;
+	
+	std::string vcxprojFilePath;
+
+	std::string ctagsFilePath;
+
 	std::string RemoveSpaces(const std::string& line);
 
 	std::string GetDiretoryFromPath(const std::string& path);
@@ -120,6 +126,8 @@ private:
 
 	void FormatTextCtrlDeclarations(const std::vector<std::pair<std::string, std::string>>& txtCtrlRefVarName_TypePair);
 
+	std::string GetFileName(const std::string& filePath);
+
 public:
 
 	CodeToGui();
@@ -128,7 +136,7 @@ public:
 	std::string GetUserMainFilePath();
 
 	int LoadInfoFromMetadataFile(const std::string& metadataFilePath);
-	int LoadInfoFromTagFile(const std::string& metadataFilePath);
+	int LoadInfoFromTagFile();
 	int LoadInfoFromMainFile();
 
 	void GenerateGuiBoilerplateCode();

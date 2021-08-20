@@ -1,3 +1,10 @@
-Hello world
-C:\Home\Projects\Github\Code2Gui\ClientTest\main.cpp
-1
+///		Update GUI window title by modifying text after colon':'
+window_title        :Hello world
+
+///		Specify whether to rebuild GUI after running application or not
+rebuild_gui[yes/no] :yes
+
+///		Do not make any modifications below
+entry_file_path     :C:\Home\Projects\Github\Code2Gui\ClientTest\main.cpp
+vcxproj_file_path   :
+codetogui_setup_path:

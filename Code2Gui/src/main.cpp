@@ -7,14 +7,20 @@
 #include <list>
 #include "CodeToGui.h"
 
-int main() {
+int main(int argc, char** argv) {
+	if (argc != 2) {
+		std::cout << "Code2Gui::Log:: Bat file corrupted." << std::endl;
+		std::cout << "Code2Gui::Log:: Exiting..." << std::endl;
+		return 0;
+	}
+
 	int result = -1;
 	
 	CodeToGui codeToGui;
-	result = codeToGui.LoadInfoFromMetadataFile("C:\\Home\\Projects\\Github\\Code2Gui\\ClientTest\\C2GMetadata.txt");
+	result = codeToGui.LoadInfoFromMetadataFile(argv[1]);
 
 	if (result == -1) {
-		std::cout << "Code2Gui::Log:: Unable to open/read C2GMetadata.txt" << std::endl;
+		std::cout << "Code2Gui::Log:: C2GMetadata.txt file got corrupted." << std::endl;
 		std::cout << "Code2Gui::Log:: Exiting..." << std::endl;
 		return 0;
 	}
@@ -25,7 +31,7 @@ int main() {
 		return 0;
 	}
 
-	result = codeToGui.LoadInfoFromTagFile("C:\\Home\\Projects\\Github\\Code2Gui\\binCode2Gui\\x64\\Debug\\tags.txt");
+	result = codeToGui.LoadInfoFromTagFile();
 
 	if (result == -1) {
 		std::cout << "Code2Gui::Log:: Internal tag file missing/corrupted" << std::endl;
