@@ -7,6 +7,9 @@ Currently Supported Platform: Windows
 This desktop application is built to tackle the hassle of adding Gui to a project. Precisely, it can be used in times when a very basic Gui is required and wasting time in setup+integration of main-stream Gui Api is not feasible.
 Visit https://codetogui.com for more info. Youtube demo to blow your mind https://www.youtube.com/watch?v=d9ruofVpXMY.
 
+## Willing to use it in vscode with python?
+Currently the installer is for Visual Studio + Cpp environment. Please leave a star is you want to use it in vscode with Python, I'll start to work on it on mere 100 stars.
+
 ## Who should use it?
 
 ### Developers
@@ -16,12 +19,12 @@ They can use it in their pet-projects or even production ones to showcase basic 
 University presentations can be made much more effective using quick and easy setup of Gui with CodeToGui.
 
 ## Current support
-Latest version supports Microsoft Visual Studio Ide and C++ language.
+Latest version supports Microsoft Visual Studio Ide and C++ language. Get the latest installer from website/github releases.
 
-## Installation
-Kindly visit the website to check installation instructions.
+## Quick Installation
+Kindly visit the website to check installation instructions and follow the youtube tutorial https://www.youtube.com/watch?v=x067ZolDSsI.
 
-# Warning: Crude unformatted development readme
+# Warning: Crude unformatted development readme for nerds
 
 EndGame 1: (Done)
 Steps:
