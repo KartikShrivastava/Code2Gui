@@ -8,7 +8,7 @@ This desktop application is built to tackle the hassle of adding Gui to a projec
 Visit https://codetogui.com for more info. Youtube demo to blow your mind https://www.youtube.com/watch?v=d9ruofVpXMY.
 
 ## Willing to use it in vscode with python?
-Currently the installer is for Visual Studio + Cpp environment. Please leave a star is you want to use it in vscode with Python, I'll start to work on it on mere 15 stars.
+Currently the installer is for Visual Studio + Cpp environment. Leave a comment if you want to use it elsewhere.
 
 ## Who should use it?
 
