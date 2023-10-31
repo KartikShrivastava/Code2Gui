@@ -1,4 +1,3 @@
-## CodeToGui is now open source
 This repository aims to create a faster way to generate gui from code without making any additionaly changes in the code-flow.
 Currently Supported Language: C++
 Currently Supported Platform: Windows
