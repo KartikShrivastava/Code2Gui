@@ -21,5 +21,5 @@ University presentations can be made much more effective using quick and easy se
 ## Current support
 Latest version supports Microsoft Visual Studio Ide and C++ language. Get the latest installer from website/github releases.
 
-## Quick Installation
-Kindly visit the website to check installation instructions and follow the youtube tutorial https://www.youtube.com/watch?v=x067ZolDSsI.
+## How to use?
+Youtube tutorial https://www.youtube.com/watch?v=x067ZolDSsI.
